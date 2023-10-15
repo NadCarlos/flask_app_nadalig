@@ -1,21 +1,26 @@
-# imagen de la distro de Linux
-# FROM ubuntu:18.04
-#imagen de Python y distro linux que vamos a usar
-FROM python:alpine3.8
+#imagen python.
+FROM python:3.9-alpine
 
-# Copia todo lo del directorio en el contenedor
-COPY . /flask_app
+#Copia el directorio del contenedor.
+COPY . /sql_alchemy
+WORKDIR /sql_alchemy
 
-# Setea el directorio de trabajo en el contenedor
-WORKDIR /flask_app
-
-# Corre comandos
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Expone puerto
+
+#expone el puerto del contenedor
 EXPOSE 5005
 
-ENTRYPOINT [ "python" ]
 
-CMD [ "__init__.py" ]
+# Define environment variables
+ENV FLASK_APP=app/__init__.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+
+
+# Make the script executable
+# RUN chmod +x /sql_alchemy/run.sh
+
+# Run the script when the container starts
+CMD ["sh", "run.sh"]

@@ -8,6 +8,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable = False)
     first_name = db.Column(db.String(50), unique=False, nullable = False)
     last_name = db.Column(db.String(50), unique=False, nullable = False)
+    password = db.Column(db.String(200), unique=False, nullable = False)
     posts = db.relationship('Post')
     
 class Post(db.Model):
