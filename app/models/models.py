@@ -23,4 +23,24 @@ class Post(db.Model):
         nullable = False,
     )
 
+    coment = db.Column(
+        db.Integer,
+        ForeignKey('coment.id'),
+        nullable = True,
+    )
+
+    user_obj = db.relationship('User')
+    coment_obj = db.relationship('Coment')
+
+class Coment(db.Model):
+    __tablename__ = 'coment'
+
+    id = db.Column(db.Integer, primary_key = True)
+    content = db.Column(db.String(50))
+    user = db.Column(
+        db.Integer,
+        ForeignKey('user.id'),
+        nullable = False,
+    )
+
     user_obj = db.relationship('User')

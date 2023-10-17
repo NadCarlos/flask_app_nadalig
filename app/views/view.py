@@ -9,7 +9,6 @@ from flask_jwt_extended import(
     get_jwt,
     get_jwt_identity,
     jwt_required,
-
 )
 
 from app import app, db
@@ -33,7 +32,7 @@ from datetime import timedelta
 
 @app.route('/')
 def index():
-    return jsonify(mensaje='tudjt')
+    return jsonify(mensaje='Mattia Binotto')
 
 @app.route('/user', methods=['POST', 'GET'])
 def users():
@@ -116,9 +115,8 @@ def login():
             "Login":"Ok",
             "Token":access_token
             }
-        ) 
+        )
     return jsonify(Error= "User or password wrong")
-
 
 @app.route('/post', methods=['POST', 'GET'])
 def posts():
@@ -140,6 +138,6 @@ def posts():
         return jsonify(Mensaje='Se agrego nuevo post')
     
     if request.method == 'GET':
-        post = User.query.all()
-        post_schema = PostSchema().dump(users, many=True)
+        posts = Post.query.all()
+        post_schema = PostSchema().dump(posts, many=True)
         return jsonify(post_schema)
