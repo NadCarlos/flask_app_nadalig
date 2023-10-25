@@ -17,8 +17,6 @@ EXPOSE 5005
 ENV FLASK_APP=app/__init__.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
-
-
 # Make the script executable
 # RUN chmod +x /sql_alchemy/run.sh
 

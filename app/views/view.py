@@ -1,8 +1,9 @@
 from flask import (
     jsonify,
-    request,
-    render_template,
+    request
 )
+
+from flask.views import MethodView
 
 from flask_jwt_extended import(
     create_access_token,
@@ -16,11 +17,13 @@ from app import app, db
 from app.models.models import(
     User,
     Post,
+    Coment,
 )
 
 from app.schemas.schema import(
     UserSchema,
     PostSchema,
+    ComentSchema,
 )
 
 from werkzeug.security import(
@@ -32,11 +35,25 @@ from datetime import timedelta
 
 @app.route('/')
 def index():
+class UserMethod(MethodView):
+    def get(self, user_id = None):
     return jsonify(mensaje='Ferrari')
 
-@app.route('/user', methods=['POST', 'GET'])
-def users():
-    if request.method == 'POST':
+
+        # Busco todos los usuarios
+        if user_id is None:
+            users = User.query.all()
+            users_schema = UserSchema().dump(users, many=True)
+            return jsonify(users_schema)
+        
+        # Busco un unico usuario por su ID
+        user = User.query.get(user_id)
+        user_schema = UserSchema().dump(user)
+        return jsonify(user_schema)
+
+    def post(self):
+
+        #Creo un nuevo usuario
         data = request.get_json()
         username = data.get('username')
         first_name = data.get('first_name')
@@ -51,37 +68,14 @@ def users():
             last_name = last_name,
             password = password_hash,
         )
-
         db.session.add(new_user)
         db.session.commit()
         return jsonify(Mensaje=f"Se creo el usuario: {username}")
     
-    if request.method == 'GET':
-        users = User.query.all()
-        users_schema = UserSchema().dump(users, many=True)
-        return jsonify(users_schema)
+    def put(self, user_id):
 
-@app.route('/user/<id_user>', methods=['PUT', 'DELETE', 'GET'])
-def users_by_id(id_user):
-    if request.method == 'GET':
-        # Busco un unico usuario por su ID
-        user = User.query.get(id_user)
-        # Lo convierto en un esquema
-        user_schema = UserSchema().dump(user)
-        return jsonify(user_schema)
-
-    if request.method == 'DELETE':
-        # Busco un unico usuario por su ID
-        user = User.query.get(id_user)
-        # Elimino el usuario
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify(Mensaje=f"User {id_user} deleted")
-    
-    if request.method == 'PUT':
-        # Busco un unico usuario por su ID a modificar
-        user = User.query.get(id_user)
-        # Info a modificar
+        # Actualizar informacion de usuario segun id
+        user = User.query.get(user_id)
         data = request.get_json()
         new_password = data.get('password')
 
@@ -92,43 +86,64 @@ def users_by_id(id_user):
 
         user_schema = UserSchema().dump(user)
         return jsonify(user_schema)
+
+    def delete(self, user_id):
+
+        # Elimino un usuario segun id
+        user = User.query.get(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify(Mensaje=f"User {user_id} deleted")
+
+app.add_url_rule('/user',view_func=UserMethod.as_view('User'))
+app.add_url_rule('/user/<user_id>',view_func=UserMethod.as_view('User_by_id'))
+
+
+class LoginMethod(MethodView):
+    def post(self):
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(
+            pwhash = user.password,
+            password = password
+        ):
+            access_token = create_access_token(
+                identity=user.username,
+                expires_delta=timedelta(minutes=2),
+                additional_claims={'id_user:':user.id}
+            )
+            return jsonify(
+                {
+                "Login":"Ok",
+                "Token":access_token
+                }
+            )
+        return jsonify(Error= "User or password wrong")
     
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+app.add_url_rule('/login',view_func=LoginMethod.as_view('Login'))
 
-    user = User.query.filter_by(username=username).first()
 
-    if user and check_password_hash(
-        pwhash = user.password,
-        password = password
-    ):
-        access_token = create_access_token(
-            identity=user.username,
-            expires_delta=timedelta(minutes=2),
-            additional_claims={'id_user:':user.id}
-        )
-        return jsonify(
-            {
-            "Login":"Ok",
-            "Token":access_token
-            }
-        )
-    return jsonify(Error= "User or password wrong")
+class PostMethod(MethodView):
+    def get(self):
+        posts = Post.query.all()
+        post_schema = PostSchema().dump(posts, many=True)
+        return jsonify(post_schema)
 
-@app.route('/post', methods=['POST', 'GET'])
-def posts():
-    if request.method == 'POST':
+    def post(self):
         data = request.get_json()
 
         title = data.get('title')
+        topic = data.get('topic_id')
         content = data.get('content')
         user = data.get('user_id')
 
         new_post = Post(
             title=title,
+            topic=topic,
             content=content,
             user=user,
         )
@@ -136,8 +151,11 @@ def posts():
         db.session.add(new_post)
         db.session.commit()
         return jsonify(Mensaje='Se agrego nuevo post')
-    
-    if request.method == 'GET':
-        posts = Post.query.all()
-        post_schema = PostSchema().dump(posts, many=True)
-        return jsonify(post_schema)
+
+app.add_url_rule('/post',view_func=PostMethod.as_view('Post'))
+
+@app.route('/coment', methods=['POST', 'GET'])
+def coment():
+    coment = Coment.query.all()
+    coment_schema = ComentSchema().dump(coment, many=True)
+    return jsonify(coment_schema)

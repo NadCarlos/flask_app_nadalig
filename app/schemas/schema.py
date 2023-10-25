@@ -1,7 +1,8 @@
 from app import ma
 from marshmallow import fields
-from app.models.models import User
- 
+from app.models.models import Coment
+
+
 class UserSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
     username = fields.String()
@@ -9,18 +10,25 @@ class UserSchema(ma.Schema):
     last_name = fields.String()
     password = fields.String()
 
-class ComentSchema(ma.Schema):
+
+class TopicSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
-    content = fields.String()
-    user = fields.Integer()
-    user = fields.Integer()
-    user_obj = fields.Nested(UserSchema)
+    name = fields.String()
+
 
 class PostSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
     title = fields.String()
     content = fields.String()
     user = fields.Integer()
-    user_obj = fields.Nested(UserSchema)
-    coment = fields.Integer()
-    coment_obj = fields.Nested(ComentSchema)
+    user_obj = fields.Nested(UserSchema, exclude=['id', 'password'])
+    topic = fields.Integer()
+    topic_obj = fields.Nested(TopicSchema, exclude=['id'])
+
+
+class ComentSchema(ma.Schema):
+    id = fields.Integer(dump_only=True)
+    content = fields.String()
+    post = fields.Integer()
+    user = fields.Integer()
+    user_obj = fields.Nested(UserSchema, exclude=['id', 'password'])

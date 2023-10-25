@@ -10,27 +10,35 @@ class User(db.Model):
     last_name = db.Column(db.String(50), unique=False, nullable = False)
     password = db.Column(db.String(200), unique=False, nullable = False)
     posts = db.relationship('Post')
-    
+
+class Topic(db.Model):
+    __tablename__ = 'topic'
+
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(50))
+
 class Post(db.Model):
     __tablename__ = 'post'
 
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(50))
     content = db.Column(db.String(50))
+
     user = db.Column(
         db.Integer,
         ForeignKey('user.id'),
         nullable = False,
     )
 
-    coment = db.Column(
+    topic = db.Column(
         db.Integer,
-        ForeignKey('coment.id'),
-        nullable = True,
+        ForeignKey('topic.id'),
+        nullable = False,
     )
 
     user_obj = db.relationship('User')
-    coment_obj = db.relationship('Coment')
+    topic_obj = db.relationship('Topic')
+
 
 class Coment(db.Model):
     __tablename__ = 'coment'
@@ -43,4 +51,11 @@ class Coment(db.Model):
         nullable = False,
     )
 
+    post = db.Column(
+        db.Integer,
+        ForeignKey('post.id'),
+        nullable = False,
+    )
+
+    post_obj = db.relationship('Post')
     user_obj = db.relationship('User')
