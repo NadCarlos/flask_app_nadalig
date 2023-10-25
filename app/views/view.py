@@ -35,11 +35,10 @@ from datetime import timedelta
 
 @app.route('/')
 def index():
-    return jsonify(mensaje='Ford')
-
 class UserMethod(MethodView):
-
     def get(self, user_id = None):
+    return jsonify(mensaje='Ferrari')
+
 
         # Busco todos los usuarios
         if user_id is None:
