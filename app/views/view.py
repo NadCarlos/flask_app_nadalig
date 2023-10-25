@@ -18,12 +18,14 @@ from app.models.models import(
     User,
     Post,
     Coment,
+    Topic
 )
 
 from app.schemas.schema import(
     UserSchema,
     PostSchema,
     ComentSchema,
+    TopicSchema
 )
 
 from werkzeug.security import(
@@ -33,12 +35,9 @@ from werkzeug.security import(
 
 from datetime import timedelta
 
-@app.route('/')
-def index():
 class UserMethod(MethodView):
+    @jwt_required()
     def get(self, user_id = None):
-    return jsonify(mensaje='Ferrari')
-
 
         # Busco todos los usuarios
         if user_id is None:
@@ -48,8 +47,14 @@ class UserMethod(MethodView):
         
         # Busco un unico usuario por su ID
         user = User.query.get(user_id)
-        user_schema = UserSchema().dump(user)
-        return jsonify(user_schema)
+        identity = get_jwt_identity()
+
+        #Verifico que sea el usuario logeado
+        if user.username == identity:
+            user_schema = UserSchema().dump(user)
+            return jsonify(user_schema)
+        
+        return jsonify(Error= "Nope")
 
     def post(self):
 
@@ -72,8 +77,9 @@ class UserMethod(MethodView):
         db.session.commit()
         return jsonify(Mensaje=f"Se creo el usuario: {username}")
     
+    @jwt_required()
     def put(self, user_id):
-
+        
         # Actualizar informacion de usuario segun id
         user = User.query.get(user_id)
         data = request.get_json()
@@ -87,14 +93,21 @@ class UserMethod(MethodView):
         user_schema = UserSchema().dump(user)
         return jsonify(user_schema)
 
+    @jwt_required()
     def delete(self, user_id):
 
         # Elimino un usuario segun id
         user = User.query.get(user_id)
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify(Mensaje=f"User {user_id} deleted")
+        identity = get_jwt_identity()
 
+        #Verifico que sea el usuario logeado
+        if user.username == identity:
+            db.session.delete(user)
+            db.session.commit()
+            return jsonify(Mensaje=f"User {user_id} deleted")
+        
+        return jsonify(Error= "No hay permisos")
+    
 app.add_url_rule('/user',view_func=UserMethod.as_view('User'))
 app.add_url_rule('/user/<user_id>',view_func=UserMethod.as_view('User_by_id'))
 
@@ -113,7 +126,7 @@ class LoginMethod(MethodView):
         ):
             access_token = create_access_token(
                 identity=user.username,
-                expires_delta=timedelta(minutes=2),
+                expires_delta=timedelta(minutes=5),
                 additional_claims={'id_user:':user.id}
             )
             return jsonify(
@@ -128,12 +141,22 @@ app.add_url_rule('/login',view_func=LoginMethod.as_view('Login'))
 
 
 class PostMethod(MethodView):
-    def get(self):
-        posts = Post.query.all()
-        post_schema = PostSchema().dump(posts, many=True)
-        return jsonify(post_schema)
+    def get(self, post_id=None):
+        #Todos los posts
+        if post_id is None:
+            posts = Post.query.all()
+            post_schema = PostSchema().dump(posts, many=True)
+            return jsonify(post_schema)
+        
+        #Post + sus respectivos comentarios
+        post = Post.query.filter_by(id=post_id)
+        post_schema = PostSchema().dump(post, many=True)
+        coment = Coment.query.filter_by(post=post_id)
+        coment_schema = ComentSchema().dump(coment, many=True)
+        return jsonify(post_schema, coment_schema)
 
     def post(self):
+        #Creacion de un post
         data = request.get_json()
 
         title = data.get('title')
@@ -150,12 +173,30 @@ class PostMethod(MethodView):
         
         db.session.add(new_post)
         db.session.commit()
-        return jsonify(Mensaje='Se agrego nuevo post')
+        return jsonify(Mensaje='New post added')
 
 app.add_url_rule('/post',view_func=PostMethod.as_view('Post'))
+app.add_url_rule('/post/<post_id>',view_func=PostMethod.as_view('Post_and_comments'))
 
-@app.route('/coment', methods=['POST', 'GET'])
-def coment():
-    coment = Coment.query.all()
-    coment_schema = ComentSchema().dump(coment, many=True)
-    return jsonify(coment_schema)
+
+class TopicMethod(MethodView):
+    def get(self):
+        topics = Topic.query.all()
+        topic_schema = TopicSchema().dump(topics, many=True)
+        return jsonify(topic_schema)
+
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+
+        nombre = data.get('nombre')
+
+        new_topic = Topic(
+            nombre = nombre
+        )
+
+        db.session.add(new_topic)
+        db.session.commit()
+        return jsonify(Mensaje='New topic added')
+
+app.add_url_rule('/topic',view_func=PostMethod.as_view('Topic'))

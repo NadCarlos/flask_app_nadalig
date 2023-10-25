@@ -1,6 +1,7 @@
 from app import db
 from sqlalchemy import ForeignKey
 
+
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -11,11 +12,13 @@ class User(db.Model):
     password = db.Column(db.String(200), unique=False, nullable = False)
     posts = db.relationship('Post')
 
+
 class Topic(db.Model):
     __tablename__ = 'topic'
 
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(50))
+
 
 class Post(db.Model):
     __tablename__ = 'post'
