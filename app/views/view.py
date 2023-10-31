@@ -35,6 +35,13 @@ from werkzeug.security import(
 
 from datetime import timedelta
 
+class IndexMethod(MethodView):
+    def get(self):
+        return jsonify(Index= "Estas en el index")
+
+app.add_url_rule('/',view_func=IndexMethod.as_view('Index'))
+
+
 class UserMethod(MethodView):
     @jwt_required()
     def get(self, user_id = None):
