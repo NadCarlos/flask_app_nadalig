@@ -1,9 +1,13 @@
 from app import ma
 from marshmallow import fields
-from app.models.models import Coment
 
 
-class UserSchema(ma.Schema):
+class PublicUserSchema(ma.Schema):
+    id = fields.Integer(dump_only=True)
+    username = fields.String()
+
+
+class PrivateUserSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
     username = fields.String()
     first_name = fields.String()
@@ -21,7 +25,7 @@ class PostSchema(ma.Schema):
     title = fields.String()
     content = fields.String()
     user = fields.Integer()
-    user_obj = fields.Nested(UserSchema, exclude=['id', 'password'])
+    user_obj = fields.Nested(PrivateUserSchema, exclude=['id', 'password'])
     topic = fields.Integer()
     topic_obj = fields.Nested(TopicSchema, exclude=['id'])
 
@@ -31,4 +35,4 @@ class ComentSchema(ma.Schema):
     content = fields.String()
     post = fields.Integer()
     user = fields.Integer()
-    user_obj = fields.Nested(UserSchema, exclude=['id', 'password'])
+    user_obj = fields.Nested(PrivateUserSchema, exclude=['id', 'password'])
