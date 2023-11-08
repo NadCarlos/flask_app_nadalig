@@ -175,3 +175,6 @@ cython_debug/
 
 #entorno
 entorno
+
+#Allow
+!thunder_collection_flask_app.json

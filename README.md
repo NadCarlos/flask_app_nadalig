@@ -25,3 +25,6 @@ docker-compose build && docker-compose up
 If everything is working and you got no errors you can stop the container with `ctrl + c` and run again `docker-compose up -d` to detach it from the console,
 then, to stop the container using `-d` use `docker-compose stop`
 
+## Examples 
+
+In the file "thunder_collection_flask_app.json" you have the examples for you to sart using the app
